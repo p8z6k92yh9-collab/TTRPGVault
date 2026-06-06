@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MERP Collection</title>
-
 <style>
 body {
     font-family: Arial, sans-serif;
@@ -13,60 +12,56 @@ body {
     padding: 20px;
     background-color: #f4f4f4;
 }
-
 h1 {
     color: #333;
 }
-
+.back-link {
+    margin-bottom: 20px;
+    display: inline-block;
+    text-decoration: none;
+    color: #0066cc;
+}
+.back-link:hover {
+    text-decoration: underline;
+}
 table {
     width: 100%;
     border-collapse: collapse;
     background: white;
 }
-
 th, td {
     border: 1px solid #ddd;
     padding: 10px;
     text-align: left;
 }
-
 th {
     background-color: #2c3e50;
     color: white;
     cursor: pointer;
+    user-select: none;
 }
-
 th:hover {
     background-color: #34495e;
 }
-
 tr:nth-child(even) {
     background-color: #f9f9f9;
 }
-
-.back-link {
-    margin-bottom: 20px;
-    display: inline-block;
-}
 </style>
-
 </head>
 <body>
 
-<a class="back-link" href="index.html">← Back to Home</a>
+← Back to Home
 
 <h1>Middle-earth Role Playing (MERP)</h1>
-
 <p>Collection of MERP books.</p>
-
 <table id="bookTable">
     <thead>
         <tr>
-            <th onclick="sortTable(0)">Code</th>
-            <th onclick="sortTable(1)">Name</th>
-            <th onclick="sortTable(2)">Year</th>
-            <th onclick="sortTable(3)">ISBN</th>
-            <th onclick="sortTable(4)">Owned</th>
+            <th onclick="sortTable(0)">Code ▲▼</th>
+            <th onclick="sortTable(1)">Name ▲▼</th>
+            <th onclick="sortTable(2)">Year ▲▼</th>
+            <th onclick="sortTable(3)">ISBN ▲▼</th>
+            <th onclick="sortTable(4)">Owned ▲▼</th>
         </tr>
     </thead>
     <tbody>
@@ -100,46 +95,35 @@ tr:nth-child(even) {
         </tr>
     </tbody>
 </table>
-
 <script>
-function sortTable(column) {
+function sortTable(colIndex) {
     const table = document.getElementById("bookTable");
-    let switching = true;
-    let direction = "asc";
-
-    while (switching) {
-        switching = false;
-        let rows = table.rows;
-
-        for (let i = 1; i < rows.length - 1; i++) {
-            let shouldSwitch = false;
-
-            let x = rows[i].getElementsByTagName("TD")[column];
-            let y = rows[i + 1].getElementsByTagName("TD")[column];
-
-            if (direction === "asc") {
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            } else {
-                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                    shouldSwitch = true;
-                    break;
-                }
-            }
-        }
-
-        if (shouldSwitch) {
-            rows[shouldSwitch ? i : 0].parentNode.insertBefore(rows[i + 1], rows[i]);
-            switching = true;
-        } else if (direction === "asc") {
-            direction = "desc";
-            switching = true;
-        }
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const currentColumn = table.dataset.sortColumn;
+    const currentDirection = table.dataset.sortDirection || "asc";
+    let newDirection = "asc";
+    if (currentColumn == colIndex) {
+        newDirection = currentDirection === "asc" ? "desc" : "asc";
     }
+    rows.sort((a, b) => {
+        let aVal = a.cells[colIndex].textContent.trim();
+        let bVal = b.cells[colIndex].textContent.trim();
+        const aNum = Number(aVal);
+        const bNum = Number(bVal);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return newDirection === "asc"
+                ? aNum - bNum
+                : bNum - aNum;
+        }
+        return newDirection === "asc"
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+    });
+    rows.forEach(row => tbody.appendChild(row));
+    table.dataset.sortColumn = colIndex;
+    table.dataset.sortDirection = newDirection;
 }
 </script>
-
 </body>
 </html>
