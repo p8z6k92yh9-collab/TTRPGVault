@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERP Collection</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    color: #333;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #2c3e50;
+    color: white;
+    cursor: pointer;
+}
+
+th:hover {
+    background-color: #34495e;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.back-link {
+    margin-bottom: 20px;
+    display: inline-block;
+}
+</style>
+
+</head>
+<body>
+
+<a class="back-link" href="index.html">← Back to Home</a>
+
+<h1>Middle-earth Role Playing (MERP)</h1>
+
+<p>Collection of MERP books.</p>
+
+<table id="bookTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable(0)">Code</th>
+            <th onclick="sortTable(1)">Name</th>
+            <th onclick="sortTable(2)">Year</th>
+            <th onclick="sortTable(3)">ISBN</th>
+            <th onclick="sortTable(4)">Owned</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>MERP8000</td>
+            <td>Middle-earth Role Playing</td>
+            <td>1984</td>
+            <td>0915795307</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>MERP8100</td>
+            <td>Bree and the Barrow Downs</td>
+            <td>1984</td>
+            <td>0915795374</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>MERP8200</td>
+            <td>Angmar: Land of the Witch King</td>
+            <td>1991</td>
+            <td>1558061646</td>
+            <td>No</td>
+        </tr>
+        <tr>
+            <td>MERP8300</td>
+            <td>Moria</td>
+            <td>1992</td>
+            <td>1558062189</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+
+<script>
+function sortTable(column) {
+    const table = document.getElementById("bookTable");
+    let switching = true;
+    let direction = "asc";
+
+    while (switching) {
+        switching = false;
+        let rows = table.rows;
+
+        for (let i = 1; i < rows.length - 1; i++) {
+            let shouldSwitch = false;
+
+            let x = rows[i].getElementsByTagName("TD")[column];
+            let y = rows[i + 1].getElementsByTagName("TD")[column];
+
+            if (direction === "asc") {
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                    shouldSwitch = true;
+                    break;
+                }
+            } else {
+                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                    shouldSwitch = true;
+                    break;
+                }
+            }
+        }
+
+        if (shouldSwitch) {
+            rows[shouldSwitch ? i : 0].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+        } else if (direction === "asc") {
+            direction = "desc";
+            switching = true;
+        }
+    }
+}
+</script>
+
+</body>
+</html>
