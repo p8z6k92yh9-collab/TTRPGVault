@@ -1,0 +1,30 @@
+[
+  {
+    "Code": "MERP8000",
+    "Name": "Middle-earth Role Playing",
+    "Year": 1984,
+    "ISBN": "0915795307",
+    "Owned": true
+  },
+  {
+    "Code": "MERP8100",
+    "Name": "Bree and the Barrow Downs",
+    "Year": 1984,
+    "ISBN": "0915795374",
+    "Owned": true
+  },
+  {
+    "Code": "MERP8200",
+    "Name": "Angmar: Land of the Witch King",
+    "Year": 1991,
+    "ISBN": "1558061646",
+    "Owned": false
+  },
+  {
+    "Code": "MERP8300",
+    "Name": "Moria",
+    "Year": 1992,
+    "ISBN": "1558062189",
+    "Owned": true
+  }
+]
