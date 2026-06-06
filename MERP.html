@@ -4,126 +4,133 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MERP Collection</title>
+
 <style>
 body {
     font-family: Arial, sans-serif;
     max-width: 1200px;
     margin: auto;
     padding: 20px;
-    background-color: #f4f4f4;
+    background: #f4f4f4;
 }
-h1 {
-    color: #333;
-}
-.back-link {
-    margin-bottom: 20px;
-    display: inline-block;
-    text-decoration: none;
-    color: #0066cc;
-}
-.back-link:hover {
-    text-decoration: underline;
-}
+
 table {
     width: 100%;
     border-collapse: collapse;
     background: white;
 }
+
 th, td {
     border: 1px solid #ddd;
     padding: 10px;
-    text-align: left;
 }
+
 th {
-    background-color: #2c3e50;
+    background: #2c3e50;
     color: white;
     cursor: pointer;
-    user-select: none;
 }
+
 th:hover {
-    background-color: #34495e;
+    background: #34495e;
 }
+
 tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background: #f9f9f9;
 }
 </style>
+
 </head>
 <body>
 
-← Back to Home
-
 <h1>Middle-earth Role Playing (MERP)</h1>
-<p>Collection of MERP books.</p>
+
 <table id="bookTable">
     <thead>
         <tr>
-            <th onclick="sortTable(0)">Code ▲▼</th>
-            <th onclick="sortTable(1)">Name ▲▼</th>
-            <th onclick="sortTable(2)">Year ▲▼</th>
-            <th onclick="sortTable(3)">ISBN ▲▼</th>
-            <th onclick="sortTable(4)">Owned ▲▼</th>
+            <th onclick="sortTable(0)">Code</th>
+            <th onclick="sortTable(1)">Name</th>
+            <th onclick="sortTable(2)">Year</th>
+            <th onclick="sortTable(3)">ISBN</th>
+            <th onclick="sortTable(4)">Owned</th>
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>MERP8000</td>
-            <td>Middle-earth Role Playing</td>
-            <td>1984</td>
-            <td>0915795307</td>
-            <td>Yes</td>
-        </tr>
-        <tr>
-            <td>MERP8100</td>
-            <td>Bree and the Barrow Downs</td>
-            <td>1984</td>
-            <td>0915795374</td>
-            <td>Yes</td>
-        </tr>
-        <tr>
-            <td>MERP8200</td>
-            <td>Angmar: Land of the Witch King</td>
-            <td>1991</td>
-            <td>1558061646</td>
-            <td>No</td>
-        </tr>
-        <tr>
-            <td>MERP8300</td>
-            <td>Moria</td>
-            <td>1992</td>
-            <td>1558062189</td>
-            <td>Yes</td>
-        </tr>
     </tbody>
 </table>
+
 <script>
-function sortTable(colIndex) {
-    const table = document.getElementById("bookTable");
-    const tbody = table.querySelector("tbody");
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    const currentColumn = table.dataset.sortColumn;
-    const currentDirection = table.dataset.sortDirection || "asc";
-    let newDirection = "asc";
-    if (currentColumn == colIndex) {
-        newDirection = currentDirection === "asc" ? "desc" : "asc";
-    }
-    rows.sort((a, b) => {
-        let aVal = a.cells[colIndex].textContent.trim();
-        let bVal = b.cells[colIndex].textContent.trim();
-        const aNum = Number(aVal);
-        const bNum = Number(bVal);
-        if (!isNaN(aNum) && !isNaN(bNum)) {
-            return newDirection === "asc"
-                ? aNum - bNum
-                : bNum - aNum;
-        }
-        return newDirection === "asc"
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal);
+
+let tableData = [];
+let sortDirection = {};
+
+fetch('data/MERP.json')
+    .then(response => response.json())
+    .then(data => {
+        tableData = data;
+        renderTable();
     });
-    rows.forEach(row => tbody.appendChild(row));
-    table.dataset.sortColumn = colIndex;
-    table.dataset.sortDirection = newDirection;
+
+function renderTable() {
+
+    const tbody = document.querySelector('#bookTable tbody');
+    tbody.innerHTML = '';
+
+    tableData.forEach(book => {
+
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+            <td>${book.Code}</td>
+            <td>${book.Name}</td>
+            <td>${book.Year}</td>
+            <td>${book.ISBN}</td>
+            <td>${book.Owned ? 'Yes' : 'No'}</td>
+        `;
+
+        tbody.appendChild(row);
+    });
 }
+
+function sortTable(column) {
+
+    const fields = [
+        'Code',
+        'Name',
+        'Year',
+        'ISBN',
+        'Owned'
+    ];
+
+    const field = fields[column];
+
+    sortDirection[field] = !sortDirection[field];
+
+    tableData.sort((a, b) => {
+
+        let valA = a[field];
+        let valB = b[field];
+
+        if (typeof valA === 'string') {
+            valA = valA.toUpperCase();
+            valB = valB.toUpperCase();
+        }
+
+        if (valA < valB) {
+            return sortDirection[field] ? -1 : 1;
+        }
+
+        if (valA > valB) {
+            return sortDirection[field] ? 1 : -1;
+        }
+
+        return 0;
+    });
+
+    renderTable();
+}
+
 </script>
+
 </body>
 </html>
