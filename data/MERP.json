@@ -1,30 +1,26 @@
 [
   {
-    "Code": "MERP8000",
-    "Name": "Middle-earth Role Playing",
-    "Year": 1984,
-    "ISBN": "0915795307",
-    "Owned": true
+    "BookCode": "ICE8106",
+    "BookName": "Assassins of Dol Amroth",
+    "BookISBN": "0-915795-98-1",
+    "BookPublished": 1987
   },
   {
-    "Code": "MERP8100",
-    "Name": "Bree and the Barrow Downs",
-    "Year": 1984,
-    "ISBN": "0915795374",
-    "Owned": true
+    "BookCode": "ICE8010",
+    "BookName": "Bree and The Barrow Downs",
+    "BookISBN": "0-915795-16-7",
+    "BookPublished": 1984
   },
   {
-    "Code": "MERP8200",
-    "Name": "Angmar: Land of the Witch King",
-    "Year": 1991,
-    "ISBN": "1558061646",
-    "Owned": false
+    "BookCode": "ICE8090",
+    "BookName": "Brigands of Mirkwood",
+    "BookISBN": "0-915795-85-X",
+    "BookPublished": 1987
   },
   {
-    "Code": "ICE8010",
-    "Name": "Moria",
-    "Year": 1992,
-    "ISBN": "1558062189",
-    "Owned": true
+    "BookCode": "ICE8020",
+    "BookName": "Dagorlad and the Dead Marshes",
+    "BookISBN": "0-915795-20-5",
+    "BookPublished": 1984
   }
 ]

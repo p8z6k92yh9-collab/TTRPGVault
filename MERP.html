@@ -29,6 +29,7 @@ th {
     background: #2c3e50;
     color: white;
     cursor: pointer;
+    user-select: none;
 }
 
 th:hover {
@@ -50,9 +51,9 @@ tr:nth-child(even) {
         <tr>
             <th onclick="sortTable(0)">Code</th>
             <th onclick="sortTable(1)">Name</th>
-            <th onclick="sortTable(2)">Year</th>
+            <th onclick="sortTable(2)">Published</th>
             <th onclick="sortTable(3)">ISBN</th>
-            <th onclick="sortTable(4)">Owned</th>
+            <th>Owned</th>
         </tr>
     </thead>
     <tbody>
@@ -60,7 +61,6 @@ tr:nth-child(even) {
 </table>
 
 <script>
-
 let tableData = [];
 let sortDirection = {};
 
@@ -69,23 +69,24 @@ fetch('data/MERP.json')
     .then(data => {
         tableData = data;
         renderTable();
+    })
+    .catch(error => {
+        console.error('Error loading MERP.json:', error);
     });
 
 function renderTable() {
-
     const tbody = document.querySelector('#bookTable tbody');
     tbody.innerHTML = '';
 
     tableData.forEach(book => {
-
         const row = document.createElement('tr');
 
         row.innerHTML = `
-            <td>${book.Code}</td>
-            <td>${book.Name}</td>
-            <td>${book.Year}</td>
-            <td>${book.ISBN}</td>
-            <td>${book.Owned ? 'Yes' : 'No'}</td>
+            <td>${book.BookCode}</td>
+            <td>${book.BookName}</td>
+            <td>${book.BookPublished}</td>
+            <td>${book.BookISBN}</td>
+            <td></td>
         `;
 
         tbody.appendChild(row);
@@ -93,13 +94,11 @@ function renderTable() {
 }
 
 function sortTable(column) {
-
     const fields = [
-        'Code',
-        'Name',
-        'Year',
-        'ISBN',
-        'Owned'
+        'BookCode',
+        'BookName',
+        'BookPublished',
+        'BookISBN'
     ];
 
     const field = fields[column];
@@ -107,7 +106,6 @@ function sortTable(column) {
     sortDirection[field] = !sortDirection[field];
 
     tableData.sort((a, b) => {
-
         let valA = a[field];
         let valB = b[field];
 
@@ -129,7 +127,6 @@ function sortTable(column) {
 
     renderTable();
 }
-
 </script>
 
 </body>
