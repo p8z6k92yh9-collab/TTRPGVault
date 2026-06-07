@@ -14,10 +14,22 @@ body {
     background: #f4f4f4;
 }
 
+h1 {
+    margin-bottom: 5px;
+}
+
+.edition-heading {
+    margin-top: 35px;
+    color: #2c3e50;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 6px;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
     background: white;
+    margin-bottom: 30px;
 }
 
 th, td {
@@ -40,74 +52,102 @@ tr:nth-child(even) {
     background: #f9f9f9;
 }
 </style>
-
 </head>
+
 <body>
 
 <h1>Middle-earth Role Playing (MERP)</h1>
+<p>Collection organised by edition.</p>
 
-<table id="bookTable">
-    <thead>
-        <tr>
-            <th onclick="sortTable(0)">Code</th>
-            <th onclick="sortTable(1)">Name</th>
-            <th onclick="sortTable(2)">Published</th>
-            <th onclick="sortTable(3)">ISBN</th>
-            <th>Owned</th>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
-</table>
+<div id="editionTables"></div>
 
 <script>
-let tableData = [];
-let sortDirection = {};
+let allBooks = [];
+let sortState = {};
 
 fetch('data/MERP.json')
     .then(response => response.json())
     .then(data => {
-        tableData = data;
-        renderTable();
+        allBooks = data;
+        renderEditionTables();
     })
     .catch(error => {
         console.error('Error loading MERP.json:', error);
+        document.getElementById('editionTables').innerHTML =
+            '<p>Could not load MERP book data.</p>';
     });
 
-function renderTable() {
-    const tbody = document.querySelector('#bookTable tbody');
-    tbody.innerHTML = '';
+function renderEditionTables() {
+    const container = document.getElementById('editionTables');
+    container.innerHTML = '';
 
-    tableData.forEach(book => {
-        const row = document.createElement('tr');
+    const groupedBooks = {};
 
-        row.innerHTML = `
-            <td>${book.BookCode}</td>
-            <td>${book.BookName}</td>
-            <td>${book.BookPublished}</td>
-            <td>${book.BookISBN}</td>
-            <td></td>
+    allBooks.forEach(book => {
+        const edition = book.BookEdition || 'Unknown Edition';
+
+        if (!groupedBooks[edition]) {
+            groupedBooks[edition] = [];
+        }
+
+        groupedBooks[edition].push(book);
+    });
+
+    Object.keys(groupedBooks).forEach(edition => {
+        const heading = document.createElement('h2');
+        heading.className = 'edition-heading';
+        heading.textContent = edition;
+        container.appendChild(heading);
+
+        const table = document.createElement('table');
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th onclick="sortEditionTable('${edition}', 'BookCode')">Code</th>
+                    <th onclick="sortEditionTable('${edition}', 'BookName')">Name</th>
+                    <th onclick="sortEditionTable('${edition}', 'BookPublished')">Published</th>
+                    <th onclick="sortEditionTable('${edition}', 'BookISBN')">ISBN</th>
+                    <th>Owned</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
         `;
 
-        tbody.appendChild(row);
+        const tbody = table.querySelector('tbody');
+
+        groupedBooks[edition].forEach(book => {
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${book.BookCode || ''}</td>
+                <td>${book.BookName || ''}</td>
+                <td>${book.BookPublished || ''}</td>
+                <td>${book.BookISBN || ''}</td>
+                <td></td>
+            `;
+
+            tbody.appendChild(row);
+        });
+
+        container.appendChild(table);
     });
 }
 
-function sortTable(column) {
-    const fields = [
-        'BookCode',
-        'BookName',
-        'BookPublished',
-        'BookISBN'
-    ];
+function sortEditionTable(edition, field) {
+    const key = edition + '-' + field;
+    sortState[key] = !sortState[key];
 
-    const field = fields[column];
+    allBooks.sort((a, b) => {
+        const editionA = a.BookEdition || 'Unknown Edition';
+        const editionB = b.BookEdition || 'Unknown Edition';
 
-    sortDirection[field] = !sortDirection[field];
+        if (editionA !== edition || editionB !== edition) {
+            return 0;
+        }
 
-    tableData.sort((a, b) => {
-        let valA = a[field];
-        let valB = b[field];
+        let valA = a[field] || '';
+        let valB = b[field] || '';
 
         if (typeof valA === 'string') {
             valA = valA.toUpperCase();
@@ -115,17 +155,17 @@ function sortTable(column) {
         }
 
         if (valA < valB) {
-            return sortDirection[field] ? -1 : 1;
+            return sortState[key] ? -1 : 1;
         }
 
         if (valA > valB) {
-            return sortDirection[field] ? 1 : -1;
+            return sortState[key] ? 1 : -1;
         }
 
         return 0;
     });
 
-    renderTable();
+    renderEditionTables();
 }
 </script>
 

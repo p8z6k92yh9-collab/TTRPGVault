@@ -3,24 +3,29 @@
     "BookCode": "ICE8106",
     "BookName": "Assassins of Dol Amroth",
     "BookISBN": "0-915795-98-1",
-    "BookPublished": 1987
+    "BookPublished": 1987,
+    "BookEdition": "1st Edition"
   },
   {
     "BookCode": "ICE8010",
     "BookName": "Bree and The Barrow Downs",
     "BookISBN": "0-915795-16-7",
-    "BookPublished": 1984
+    "BookPublished": 1984,
+    "BookEdition": "1st Edition"
+
   },
   {
     "BookCode": "ICE8090",
     "BookName": "Brigands of Mirkwood",
     "BookISBN": "0-915795-85-X",
-    "BookPublished": 1987
+    "BookPublished": 1987,
+    "BookEdition": "1st Edition"
   },
   {
     "BookCode": "ICE8020",
     "BookName": "Dagorlad and the Dead Marshes",
     "BookISBN": "0-915795-20-5",
-    "BookPublished": 1984
+    "BookPublished": 1984,
+    "BookEdition": "2nd Edition"
   }
 ]
