@@ -4,7 +4,7 @@ cssclasses:
 BookCode: GCP-SMP-4514
 BookName: Blaster Law
 BookISBN: 1-55806-567-9
-BookPublished: 2002
+BookPublished: "2002"
 BookEdition: 3rd Edition
 BookPhysical: No
 BookOwnedPDF: Yes
@@ -25,6 +25,7 @@ BookPDF: "[[gcp-smp-4514-blasterlaw.pdf]]"
 BookPDFRenamed: DriveThru Folder
 BookLevel:
 BookGenre:
+BookPublishedVault: Yes
 ---
 
 ```horizontal  

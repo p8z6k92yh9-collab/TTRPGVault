@@ -4,7 +4,7 @@ cssclasses:
 BookCode: GCP-SMP-4512
 BookName: Equipment Manual
 BookISBN: 1-55806-564-4
-BookPublished: 2000
+BookPublished: "2000"
 BookEdition: 3rd Edition
 BookPhysical: No
 BookOwnedPDF: Yes
@@ -25,6 +25,7 @@ BookPDF: "[[gcp-smp4512-equipmentmanual.pdf]]"
 BookPDFRenamed: DriveThru Folder
 BookLevel:
 BookGenre:
+BookPublishedVault: Yes
 ---
 
 ```horizontal  

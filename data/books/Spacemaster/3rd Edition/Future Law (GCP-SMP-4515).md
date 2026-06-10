@@ -4,7 +4,7 @@ cssclasses:
 BookCode: GCP-SMP-4515
 BookName: Future Law
 BookISBN: 1-55806-569-2
-BookPublished: 2003
+BookPublished: "2003"
 BookEdition: 3rd Edition
 BookPhysical: No
 BookOwnedPDF: Yes
@@ -25,6 +25,7 @@ BookPDF: "[[gcp-smp-4515-futurelaw.pdf]]"
 BookPDFRenamed: DriveThru Folder
 BookLevel:
 BookGenre:
+BookPublishedVault: Yes
 ---
 
 ```horizontal  
