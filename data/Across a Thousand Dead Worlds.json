@@ -1,16 +1,8 @@
 [
   {
-    "BookCode": "",
-    "BookName": "Across a Thousand Dead Worlds",
-    "BookISBN": "979-8884332140",
-    "BookPublished": 2024,
-    "BookEdition": "1st Edition"
+    "BookMarkdown": "books/Across a Thousand Dead Worlds/Across a Thousand Dead Worlds.md"
   },
   {
-    "BookCode": "",
-    "BookName": "Karum Station Blues",
-    "BookISBN": "",
-    "BookPublished": 2025,
-    "BookEdition": "1st Edition"
+    "BookMarkdown": "books/Across a Thousand Dead Worlds/Karum Station Blues.md"
   }
 ]
