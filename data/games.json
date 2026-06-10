@@ -3,5 +3,10 @@
         "title": "Middle-earth Role Playing (MERP)",
         "shortTitle": "MERP",
         "json": "MERP.json"
+    },
+    {
+        "title": "Across a Thousand Dead Worlds",
+        "shortTitle": "ATDeadWorlds",
+        "json": "Across a Thousand Dead Worlds.json"
     }
 ]
