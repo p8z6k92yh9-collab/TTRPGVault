@@ -357,7 +357,7 @@
         const gameFrame = document.getElementById('gameFrame');
         const gameTree = document.getElementById('gameTree');
 
-        fetch('data/games.json')
+        fetch('data/games.json', { cache: 'no-store' })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Could not load the game catalogue.');
@@ -419,7 +419,7 @@
                     });
 
                     link.className = 'game-link';
-                    link.href = `collection.html?${parameters.toString()}`;
+                    link.href = `game.html?${parameters.toString()}`;
                     link.dataset.game = game.title;
                     link.textContent = game.shortTitle || game.title;
                     link.addEventListener('click', openGame);

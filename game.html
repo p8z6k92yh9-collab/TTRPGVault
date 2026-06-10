@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Game Collection</title>
+<title>TTRPG Collection</title>
 
 <style>
 body {
@@ -48,6 +48,17 @@ th:hover {
     background: #34495e;
 }
 
+.book-link {
+    color: #245746;
+    font-weight: 700;
+    text-decoration-color: #c69a4b;
+    text-underline-offset: 3px;
+}
+
+.book-link:hover {
+    color: #173b2f;
+}
+
 tr:nth-child(even) {
     background: #f9f9f9;
 }
@@ -80,7 +91,7 @@ if (!gameTitle || !jsonFile || jsonFile.includes('/') || jsonFile.includes('\\')
     document.title = gameTitle + ' Collection';
     document.getElementById('gameTitle').textContent = gameTitle;
 
-    fetch('data/' + jsonFile)
+    fetch('data/' + jsonFile, { cache: 'no-store' })
         .then(response => {
             if (!response.ok) {
                 throw new Error('Could not load ' + jsonFile);
@@ -157,7 +168,22 @@ function renderEditionTables() {
 
             ['BookCode', 'BookName', 'BookPublished', 'BookISBN'].forEach(field => {
                 const cell = document.createElement('td');
-                cell.textContent = book[field] || '';
+
+                if (field === 'BookName' && book.BookMarkdown) {
+                    const link = document.createElement('a');
+                    const parameters = new URLSearchParams({
+                        file: book.BookMarkdown,
+                        title: book.BookName || 'Book Details'
+                    });
+
+                    link.className = 'book-link';
+                    link.href = `book.html?${parameters.toString()}`;
+                    link.textContent = book.BookName || 'View book';
+                    cell.appendChild(link);
+                } else {
+                    cell.textContent = book[field] || '';
+                }
+
                 row.appendChild(cell);
             });
 

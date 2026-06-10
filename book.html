@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Details</title>
+
+<style>
+:root {
+    --ink: #25342c;
+    --muted: #68736c;
+    --forest: #233d32;
+    --gold: #c69a4b;
+    --paper: #fffdf7;
+    --line: #ddd4c2;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    color: var(--ink);
+    background:
+        linear-gradient(rgba(245, 240, 229, 0.88), rgba(245, 240, 229, 0.88)),
+        repeating-linear-gradient(45deg, #e7dec9 0, #e7dec9 1px, transparent 1px, transparent 12px);
+    font-family: Arial, sans-serif;
+    line-height: 1.65;
+}
+
+.page {
+    max-width: 960px;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 28px;
+    background: var(--paper);
+    box-shadow: 0 0 28px rgba(52, 45, 33, 0.12);
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 22px;
+    color: var(--forest);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.book-header {
+    padding-bottom: 22px;
+    border-bottom: 3px solid var(--gold);
+}
+
+.eyebrow {
+    margin: 0 0 7px;
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+h1,
+h2,
+h3 {
+    color: var(--forest);
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+h1 {
+    margin: 0;
+    font-size: clamp(30px, 5vw, 48px);
+    line-height: 1.12;
+}
+
+.metadata {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 24px 0 34px;
+}
+
+.property {
+    padding: 14px 16px;
+    background: #f4efe3;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+}
+
+.property-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.property-value {
+    overflow-wrap: anywhere;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px;
+}
+
+.markdown {
+    max-width: 760px;
+}
+
+.markdown h2 {
+    margin-top: 34px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+}
+
+.markdown h3 {
+    margin-top: 28px;
+}
+
+.markdown blockquote {
+    margin: 24px 0;
+    padding: 12px 20px;
+    color: #4d5b52;
+    background: #f5f0e5;
+    border-left: 4px solid var(--gold);
+}
+
+.markdown code {
+    padding: 2px 5px;
+    background: #eee8da;
+    border-radius: 3px;
+}
+
+.markdown a {
+    color: #245746;
+}
+
+.error {
+    color: #8a3d35;
+}
+
+@media (max-width: 600px) {
+    .page {
+        padding: 20px;
+    }
+}
+</style>
+</head>
+
+<body>
+<main class="page">
+    <a class="back-link" href="#" id="backLink">&larr; Back to collection</a>
+
+    <header class="book-header">
+        <p class="eyebrow">TTRPG Vault</p>
+        <h1 id="bookTitle">Book Details</h1>
+    </header>
+
+    <section class="metadata" id="metadata" aria-label="Book information"></section>
+    <article class="markdown" id="bookContent">
+        <p>Loading book details...</p>
+    </article>
+</main>
+
+<script>
+const parameters = new URLSearchParams(window.location.search);
+const markdownFile = parameters.get('file');
+const fallbackTitle = parameters.get('title') || 'Book Details';
+const bookTitle = document.getElementById('bookTitle');
+const metadata = document.getElementById('metadata');
+const bookContent = document.getElementById('bookContent');
+
+document.getElementById('backLink').addEventListener('click', event => {
+    event.preventDefault();
+    window.history.back();
+});
+
+if (!isSafeMarkdownPath(markdownFile)) {
+    showError('This book link is invalid.');
+} else {
+    bookTitle.textContent = fallbackTitle;
+    document.title = fallbackTitle + ' | TTRPG Vault';
+
+    fetch('data/' + markdownFile, { cache: 'no-store' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Could not load ' + markdownFile);
+            }
+
+            return response.text();
+        })
+        .then(renderBook)
+        .catch(error => {
+            console.error('Error loading book Markdown:', error);
+            showError('Could not load the Markdown file for this book.');
+        });
+}
+
+function isSafeMarkdownPath(path) {
+    return path &&
+        path.toLowerCase().endsWith('.md') &&
+        !path.startsWith('/') &&
+        !path.includes('..') &&
+        !path.includes('\\');
+}
+
+function renderBook(markdown) {
+    const parsed = parseFrontmatter(markdown);
+    const title = parsed.properties.Title ||
+        parsed.properties.BookName ||
+        fallbackTitle;
+
+    bookTitle.textContent = title;
+    document.title = title + ' | TTRPG Vault';
+    renderProperties(parsed.properties);
+    renderMarkdown(parsed.body);
+}
+
+function parseFrontmatter(markdown) {
+    const normalized = markdown.replace(/\r\n/g, '\n');
+    const match = normalized.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
+    const properties = {};
+
+    if (!match) {
+        return { properties, body: normalized };
+    }
+
+    match[1].split('\n').forEach(line => {
+        const separator = line.indexOf(':');
+
+        if (separator === -1) {
+            return;
+        }
+
+        const key = line.slice(0, separator).trim();
+        const value = line.slice(separator + 1).trim().replace(/^["']|["']$/g, '');
+
+        if (key) {
+            properties[key] = value;
+        }
+    });
+
+    return {
+        properties,
+        body: normalized.slice(match[0].length)
+    };
+}
+
+function renderProperties(properties) {
+    const hiddenProperties = new Set(['Title', 'BookName']);
+    metadata.innerHTML = '';
+
+    Object.entries(properties).forEach(([key, value]) => {
+        if (hiddenProperties.has(key) || !value) {
+            return;
+        }
+
+        const property = document.createElement('div');
+        property.className = 'property';
+
+        const label = document.createElement('span');
+        label.className = 'property-label';
+        label.textContent = formatLabel(key);
+
+        const propertyValue = document.createElement('span');
+        propertyValue.className = 'property-value';
+        propertyValue.textContent = value;
+
+        property.append(label, propertyValue);
+        metadata.appendChild(property);
+    });
+
+    metadata.hidden = !metadata.children.length;
+}
+
+function formatLabel(key) {
+    return key
+        .replace(/^Book/, '')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .trim();
+}
+
+function renderMarkdown(markdown) {
+    const fragment = document.createDocumentFragment();
+    const lines = markdown.split('\n');
+    let paragraph = [];
+    let list = null;
+
+    function flushParagraph() {
+        if (!paragraph.length) {
+            return;
+        }
+
+        const element = document.createElement('p');
+        appendInlineMarkdown(element, paragraph.join(' '));
+        fragment.appendChild(element);
+        paragraph = [];
+    }
+
+    function flushList() {
+        if (list) {
+            fragment.appendChild(list);
+            list = null;
+        }
+    }
+
+    lines.forEach(line => {
+        const heading = line.match(/^(#{1,3})\s+(.+)$/);
+        const listItem = line.match(/^[-*]\s+(.+)$/);
+        const quote = line.match(/^>\s?(.*)$/);
+
+        if (heading) {
+            flushParagraph();
+            flushList();
+            const level = Math.min(Math.max(heading[1].length, 2), 3);
+            const element = document.createElement('h' + level);
+            appendInlineMarkdown(element, heading[2]);
+            fragment.appendChild(element);
+        } else if (listItem) {
+            flushParagraph();
+
+            if (!list) {
+                list = document.createElement('ul');
+            }
+
+            const item = document.createElement('li');
+            appendInlineMarkdown(item, listItem[1]);
+            list.appendChild(item);
+        } else if (quote) {
+            flushParagraph();
+            flushList();
+            const element = document.createElement('blockquote');
+            appendInlineMarkdown(element, quote[1]);
+            fragment.appendChild(element);
+        } else if (!line.trim()) {
+            flushParagraph();
+            flushList();
+        } else {
+            paragraph.push(line.trim());
+        }
+    });
+
+    flushParagraph();
+    flushList();
+    bookContent.innerHTML = '';
+    bookContent.appendChild(fragment);
+}
+
+function appendInlineMarkdown(container, text) {
+    const pattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
+    let cursor = 0;
+    let match;
+
+    while ((match = pattern.exec(text)) !== null) {
+        container.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+        const token = match[0];
+
+        if (token.startsWith('**')) {
+            const strong = document.createElement('strong');
+            strong.textContent = token.slice(2, -2);
+            container.appendChild(strong);
+        } else if (token.startsWith('`')) {
+            const code = document.createElement('code');
+            code.textContent = token.slice(1, -1);
+            container.appendChild(code);
+        } else {
+            const parts = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+            const link = document.createElement('a');
+            link.textContent = parts[1];
+
+            if (/^(https?:|mailto:)/.test(parts[2])) {
+                link.href = parts[2];
+                link.rel = 'noopener noreferrer';
+            } else {
+                link.href = '#';
+            }
+
+            container.appendChild(link);
+        }
+
+        cursor = pattern.lastIndex;
+    }
+
+    container.appendChild(document.createTextNode(text.slice(cursor)));
+}
+
+function showError(message) {
+    metadata.hidden = true;
+    bookContent.innerHTML = '';
+    const error = document.createElement('p');
+    error.className = 'error';
+    error.textContent = message;
+    bookContent.appendChild(error);
+}
+</script>
+</body>
+</html>
