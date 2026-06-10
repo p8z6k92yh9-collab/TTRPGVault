@@ -117,6 +117,18 @@
             text-transform: uppercase;
         }
 
+        .navigation-message {
+            margin: 10px 8px;
+            color: var(--muted);
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .navigation-message.error {
+            color: #8a3d35;
+        }
+
         .tree-group {
             margin-bottom: 7px;
         }
@@ -323,27 +335,9 @@
     <div class="app-layout">
         <nav class="sidebar" aria-label="Game collections">
             <h2 class="sidebar-heading">Browse the archive</h2>
-
-            <details class="tree-group" open>
-                <summary>D</summary>
-                <div class="tree-branch">
-                    <a class="game-link" href="Dragonbane.html" data-game="Dragonbane">Dragonbane</a>
-                </div>
-            </details>
-
-            <details class="tree-group" open>
-                <summary>M</summary>
-                <div class="tree-branch">
-                    <a class="game-link" href="MERP.html" data-game="Middle-earth Role Playing">MERP</a>
-                </div>
-            </details>
-
-            <details class="tree-group" open>
-                <summary>T</summary>
-                <div class="tree-branch">
-                    <a class="game-link" href="Traveller.html" data-game="Traveller">Traveller</a>
-                </div>
-            </details>
+            <div id="gameTree">
+                <p class="navigation-message">Loading game collections...</p>
+            </div>
         </nav>
 
         <main class="content" id="content">
@@ -361,20 +355,92 @@
     <script>
         const content = document.getElementById('content');
         const gameFrame = document.getElementById('gameFrame');
-        const gameLinks = document.querySelectorAll('.game-link');
+        const gameTree = document.getElementById('gameTree');
 
-        gameLinks.forEach(link => {
-            link.addEventListener('click', event => {
-                event.preventDefault();
+        fetch('data/games.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Could not load the game catalogue.');
+                }
 
-                gameLinks.forEach(item => item.classList.remove('active'));
-                link.classList.add('active');
-
-                gameFrame.title = link.dataset.game + ' collection';
-                gameFrame.src = link.href;
-                content.classList.add('has-game');
+                return response.json();
+            })
+            .then(renderGameTree)
+            .catch(error => {
+                console.error('Error loading games.json:', error);
+                gameTree.innerHTML = `
+                    <p class="navigation-message error">
+                        The game list could not be loaded. Open the vault through a web server rather than directly from the file system.
+                    </p>
+                `;
             });
-        });
+
+        function renderGameTree(games) {
+            const validGames = games
+                .filter(game => game.title && game.json)
+                .sort((a, b) => a.title.localeCompare(b.title));
+
+            if (!validGames.length) {
+                gameTree.innerHTML = '<p class="navigation-message">No games have been added yet.</p>';
+                return;
+            }
+
+            const groupedGames = {};
+
+            validGames.forEach(game => {
+                const letter = game.title.charAt(0).toUpperCase();
+
+                if (!groupedGames[letter]) {
+                    groupedGames[letter] = [];
+                }
+
+                groupedGames[letter].push(game);
+            });
+
+            gameTree.innerHTML = '';
+
+            Object.keys(groupedGames).sort().forEach(letter => {
+                const group = document.createElement('details');
+                group.className = 'tree-group';
+                group.open = true;
+
+                const summary = document.createElement('summary');
+                summary.textContent = letter;
+                group.appendChild(summary);
+
+                const branch = document.createElement('div');
+                branch.className = 'tree-branch';
+
+                groupedGames[letter].forEach(game => {
+                    const link = document.createElement('a');
+                    const parameters = new URLSearchParams({
+                        title: game.title,
+                        json: game.json
+                    });
+
+                    link.className = 'game-link';
+                    link.href = `collection.html?${parameters.toString()}`;
+                    link.dataset.game = game.title;
+                    link.textContent = game.shortTitle || game.title;
+                    link.addEventListener('click', openGame);
+                    branch.appendChild(link);
+                });
+
+                group.appendChild(branch);
+                gameTree.appendChild(group);
+            });
+        }
+
+        function openGame(event) {
+            event.preventDefault();
+
+            document.querySelectorAll('.game-link').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            gameFrame.title = event.currentTarget.dataset.game + ' collection';
+            gameFrame.src = event.currentTarget.href;
+            content.classList.add('has-game');
+        }
     </script>
 </body>
 </html>
