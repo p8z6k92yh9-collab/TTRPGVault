@@ -1,8 +1,14 @@
 [
   {
-    "BookMarkdown": "books/GAME NAME/First Book (BOOKCODE1).md"
+    "BookMarkdown": "books/Rolemaster/6 - RMU/Core Law (GCP-RMU-001).md"
   },
   {
-    "BookMarkdown": "books/GAME NAME/Second Book (BOOKCODE2).md"
+    "BookMarkdown": "books/Rolemaster/6 - RMU/Core Law (GCP-RMU-001).md"
+  },
+  {
+    "BookMarkdown": "books/Rolemaster/6 - RMU/Spell Law (GCP-RMU-002).md"
+  },
+  {
+    "BookMarkdown": "books/Rolemaster/6 - RMU/Treasure Law (GCP-RMU-003).md"
   }
 ]

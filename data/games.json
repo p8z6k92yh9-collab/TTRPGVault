@@ -13,5 +13,10 @@
         "title": "Spacemaster",
         "shortTitle": "Spacemaster",
         "json": "Spacemaster.json"
+    },
+    {
+        "title": "Rolemaster",
+        "shortTitle": "Rolemaster",
+        "json": "Rolemaster.json"
     }
 ]
