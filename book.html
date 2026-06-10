@@ -30,7 +30,7 @@ body {
 }
 
 .page {
-    max-width: 960px;
+    max-width: 1180px;
     min-height: 100vh;
     margin: 0 auto;
     padding: 28px;
@@ -78,23 +78,51 @@ h1 {
     line-height: 1.12;
 }
 
+.book-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: 34px;
+    align-items: start;
+    margin-top: 30px;
+}
+
+.description-panel,
+.details-panel {
+    min-width: 0;
+}
+
+.section-heading {
+    margin: 0 0 18px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    font-size: 24px;
+}
+
 .metadata {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin: 24px 0 34px;
+    gap: 0;
+    padding: 8px 20px;
+    background: #f4efe3;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--gold);
+    border-radius: 8px;
+    box-shadow: 0 5px 16px rgba(52, 45, 33, 0.08);
 }
 
 .property {
-    padding: 14px 16px;
-    background: #f4efe3;
-    border: 1px solid var(--line);
-    border-radius: 7px;
+    display: grid;
+    grid-template-columns: minmax(90px, 0.8fr) minmax(0, 1.2fr);
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.property:last-child {
+    border-bottom: 0;
 }
 
 .property-label {
     display: block;
-    margin-bottom: 4px;
     color: var(--muted);
     font-size: 11px;
     font-weight: 800;
@@ -105,11 +133,12 @@ h1 {
 .property-value {
     overflow-wrap: anywhere;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 17px;
+    font-size: 16px;
 }
 
 .markdown {
-    max-width: 760px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px;
 }
 
 .markdown h2 {
@@ -148,6 +177,14 @@ h1 {
     .page {
         padding: 20px;
     }
+
+    .book-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .details-panel {
+        order: -1;
+    }
 }
 </style>
 </head>
@@ -161,10 +198,19 @@ h1 {
         <h1 id="bookTitle">Book Details</h1>
     </header>
 
-    <section class="metadata" id="metadata" aria-label="Book information"></section>
-    <article class="markdown" id="bookContent">
-        <p>Loading book details...</p>
-    </article>
+    <div class="book-layout">
+        <section class="description-panel">
+            <h2 class="section-heading">Description</h2>
+            <article class="markdown" id="bookContent">
+                <p>Loading book details...</p>
+            </article>
+        </section>
+
+        <aside class="details-panel">
+            <h2 class="section-heading">Details</h2>
+            <section class="metadata" id="metadata" aria-label="Book information"></section>
+        </aside>
+    </div>
 </main>
 
 <script>
@@ -218,7 +264,7 @@ function renderBook(markdown) {
     bookTitle.textContent = title;
     document.title = title + ' | TTRPG Vault';
     renderProperties(parsed.properties);
-    renderMarkdown(parsed.body);
+    renderMarkdown(extractDescription(parsed.body));
 }
 
 function parseFrontmatter(markdown) {
@@ -230,7 +276,20 @@ function parseFrontmatter(markdown) {
         return { properties, body: normalized };
     }
 
+    let currentKey = '';
+
     match[1].split('\n').forEach(line => {
+        const listItem = line.match(/^\s+-\s+(.+)$/);
+
+        if (listItem && currentKey) {
+            if (!Array.isArray(properties[currentKey])) {
+                properties[currentKey] = [];
+            }
+
+            properties[currentKey].push(stripQuotes(listItem[1].trim()));
+            return;
+        }
+
         const separator = line.indexOf(':');
 
         if (separator === -1) {
@@ -238,9 +297,10 @@ function parseFrontmatter(markdown) {
         }
 
         const key = line.slice(0, separator).trim();
-        const value = line.slice(separator + 1).trim().replace(/^["']|["']$/g, '');
+        const value = stripQuotes(line.slice(separator + 1).trim());
 
         if (key) {
+            currentKey = key;
             properties[key] = value;
         }
     });
@@ -251,12 +311,48 @@ function parseFrontmatter(markdown) {
     };
 }
 
+function stripQuotes(value) {
+    return value.replace(/^(["'])(.*)\1$/, '$2');
+}
+
+function extractDescription(markdown) {
+    const horizontalBlock = markdown.match(/```horizontal[^\n]*\n([\s\S]*?)```/i);
+
+    if (!horizontalBlock) {
+        return markdown;
+    }
+
+    let description = horizontalBlock[1];
+    const divider = description.search(/^\s*---\s*$/m);
+
+    if (divider !== -1) {
+        description = description.slice(0, divider);
+    }
+
+    return description
+        .replace(/^\s*#{1,6}\s+`=this\.BookName`\s*$/im, '')
+        .trim();
+}
+
 function renderProperties(properties) {
-    const hiddenProperties = new Set(['Title', 'BookName']);
+    const displayedProperties = [
+        ['BookCode', 'Code'],
+        ['BookName', 'Name'],
+        ['BookISBN', 'ISBN'],
+        ['BookPublished', 'Published'],
+        ['BookEdition', 'Edition'],
+        ['BookGame', 'Game'],
+        ['BookPublisher', 'Publisher'],
+        ['BookAuthor', 'Author'],
+        ['BookFormat', 'Format'],
+        ['BookType', 'Type']
+    ];
     metadata.innerHTML = '';
 
-    Object.entries(properties).forEach(([key, value]) => {
-        if (hiddenProperties.has(key) || !value) {
+    displayedProperties.forEach(([key, displayName]) => {
+        const value = properties[key];
+
+        if (!value || (Array.isArray(value) && !value.length)) {
             return;
         }
 
@@ -265,24 +361,17 @@ function renderProperties(properties) {
 
         const label = document.createElement('span');
         label.className = 'property-label';
-        label.textContent = formatLabel(key);
+        label.textContent = displayName;
 
         const propertyValue = document.createElement('span');
         propertyValue.className = 'property-value';
-        propertyValue.textContent = value;
+        propertyValue.textContent = Array.isArray(value) ? value.join(', ') : value;
 
         property.append(label, propertyValue);
         metadata.appendChild(property);
     });
 
     metadata.hidden = !metadata.children.length;
-}
-
-function formatLabel(key) {
-    return key
-        .replace(/^Book/, '')
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .trim();
 }
 
 function renderMarkdown(markdown) {
