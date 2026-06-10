@@ -170,6 +170,46 @@ h1 {
     color: #245746;
 }
 
+.series-section {
+    margin-top: 42px;
+}
+
+.series-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 0;
+    list-style: none;
+}
+
+.series-link {
+    display: block;
+    height: 100%;
+    padding: 14px 16px;
+    color: var(--forest);
+    background: #f4efe3;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--gold);
+    border-radius: 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    line-height: 1.35;
+    text-decoration: none;
+}
+
+.series-link:hover {
+    background: #eee6d5;
+}
+
+.series-code {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+}
+
 .error {
     color: #8a3d35;
 }
@@ -205,6 +245,11 @@ h1 {
             <article class="markdown" id="bookContent">
                 <p>Loading book details...</p>
             </article>
+
+            <section class="series-section" id="seriesSection" hidden>
+                <h2 class="section-heading" id="seriesHeading">Books in this Series</h2>
+                <ul class="series-list" id="seriesList"></ul>
+            </section>
         </section>
 
         <aside class="details-panel">
@@ -217,10 +262,14 @@ h1 {
 <script>
 const parameters = new URLSearchParams(window.location.search);
 const markdownFile = parameters.get('file');
+const collectionFile = parameters.get('json');
 const fallbackTitle = parameters.get('title') || 'Book Details';
 const bookTitle = document.getElementById('bookTitle');
 const metadata = document.getElementById('metadata');
 const bookContent = document.getElementById('bookContent');
+const seriesSection = document.getElementById('seriesSection');
+const seriesHeading = document.getElementById('seriesHeading');
+const seriesList = document.getElementById('seriesList');
 
 document.getElementById('backLink').addEventListener('click', event => {
     event.preventDefault();
@@ -298,6 +347,7 @@ function renderBook(markdown) {
     document.title = title + ' | TTRPG Vault';
     renderProperties(parsed.properties);
     renderMarkdown(extractDescription(parsed.body));
+    renderSeries(parsed.properties);
 }
 
 function parseFrontmatter(markdown) {
@@ -378,7 +428,9 @@ function renderProperties(properties) {
         ['BookPublisher', 'Publisher'],
         ['BookAuthor', 'Author'],
         ['BookFormat', 'Format'],
-        ['BookType', 'Type']
+        ['BookType', 'Type'],
+        ['BookSetting', 'Setting'],
+        ['BookSeries', 'Series']
     ];
     metadata.innerHTML = '';
 
@@ -405,6 +457,108 @@ function renderProperties(properties) {
     });
 
     metadata.hidden = !metadata.children.length;
+}
+
+function renderSeries(properties) {
+    const series = stringValue(properties.BookSeries);
+    const game = stringValue(properties.BookGame);
+
+    if (!series || !game || !isSafeJsonFile(collectionFile)) {
+        return;
+    }
+
+    loadCollection(collectionFile)
+        .then(entries => Promise.allSettled(entries.map(loadCollectionBook)))
+        .then(results => {
+            const relatedBooks = results
+                .filter(result => result.status === 'fulfilled')
+                .map(result => result.value)
+                .filter(book =>
+                    book.BookMarkdown !== markdownFile &&
+                    sameValue(book.BookSeries, series) &&
+                    sameValue(book.BookGame, game)
+                )
+                .sort((a, b) =>
+                    stringValue(a.BookName).localeCompare(stringValue(b.BookName))
+                );
+
+            if (!relatedBooks.length) {
+                return;
+            }
+
+            seriesHeading.textContent = 'Other Books in the Same Series';
+            seriesList.innerHTML = '';
+
+            relatedBooks.forEach(book => {
+                const item = document.createElement('li');
+                const link = document.createElement('a');
+                const linkParameters = new URLSearchParams({
+                    file: book.BookMarkdown,
+                    title: book.BookName || 'Book Details',
+                    json: collectionFile
+                });
+
+                link.className = 'series-link';
+                link.href = `book.html?${linkParameters.toString()}`;
+                link.textContent = book.BookName || book.BookMarkdown;
+
+                if (book.BookCode) {
+                    const code = document.createElement('span');
+                    code.className = 'series-code';
+                    code.textContent = book.BookCode;
+                    link.appendChild(code);
+                }
+
+                item.appendChild(link);
+                seriesList.appendChild(item);
+            });
+
+            seriesSection.hidden = false;
+        })
+        .catch(error => {
+            console.error('Error loading related books:', error);
+        });
+}
+
+function isSafeJsonFile(path) {
+    return path &&
+        path.toLowerCase().endsWith('.json') &&
+        !path.includes('/') &&
+        !path.includes('\\') &&
+        !path.includes('..');
+}
+
+function loadCollection(path) {
+    return fetch('data/' + encodeURIComponent(path), { cache: 'no-store' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Could not load ' + path);
+            }
+
+            return response.json();
+        });
+}
+
+function loadCollectionBook(entry) {
+    if (!entry.BookMarkdown) {
+        return Promise.resolve(entry);
+    }
+
+    return loadMarkdown(entry.BookMarkdown)
+        .then(markdown => ({
+            ...parseFrontmatter(markdown).properties,
+            BookMarkdown: entry.BookMarkdown
+        }));
+}
+
+function stringValue(value) {
+    return Array.isArray(value) ? value.join(', ').trim() : String(value || '').trim();
+}
+
+function sameValue(value, expected) {
+    return stringValue(value).localeCompare(expected, undefined, {
+        sensitivity: 'accent'
+    }) === 0;
 }
 
 function renderMarkdown(markdown) {

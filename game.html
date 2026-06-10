@@ -271,7 +271,8 @@ function renderEditionTables() {
                     const link = document.createElement('a');
                     const parameters = new URLSearchParams({
                         file: book.BookMarkdown,
-                        title: book.BookName || 'Book Details'
+                        title: book.BookName || 'Book Details',
+                        json: jsonFile
                     });
 
                     link.className = 'book-link';
