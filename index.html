@@ -357,7 +357,7 @@
         const gameFrame = document.getElementById('gameFrame');
         const gameTree = document.getElementById('gameTree');
 
-        fetch('data/games.json', { cache: 'no-store' })
+        fetch(`data/games.json?v=${Date.now()}`, { cache: 'no-store' })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Could not load the game catalogue.');
@@ -370,7 +370,7 @@
                 console.error('Error loading games.json:', error);
                 gameTree.innerHTML = `
                     <p class="navigation-message error">
-                        The game list could not be loaded. Open the vault through a web server rather than directly from the file system.
+                        The game list could not be loaded. Check that the site or local preview server is running, then refresh the page.
                     </p>
                 `;
             });
