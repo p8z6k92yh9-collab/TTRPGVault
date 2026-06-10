@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="github-repository" content="TTRPGGamer/TTRPGVault">
 <title>TTRPG Collection</title>
 
 <style>
@@ -104,13 +105,110 @@ if (!gameTitle || !jsonFile || jsonFile.includes('/') || jsonFile.includes('\\')
                 throw new Error('The collection JSON must contain a list of books.');
             }
 
-            allBooks = data;
+            return Promise.all(data.map(loadBookEntry));
+        })
+        .then(books => {
+            allBooks = books;
             renderEditionTables();
         })
         .catch(error => {
             console.error('Error loading collection:', error);
             showError('Could not load the book data for this game.');
         });
+}
+
+function loadBookEntry(entry) {
+    if (!entry.BookMarkdown) {
+        return Promise.resolve(entry);
+    }
+
+    return loadMarkdown(entry.BookMarkdown)
+        .then(markdown => ({
+            ...parseFrontmatter(markdown),
+            BookMarkdown: entry.BookMarkdown
+        }));
+}
+
+function loadMarkdown(path) {
+    return fetch(buildMarkdownUrl(path), { cache: 'no-store' })
+        .then(response => {
+            if (response.ok) {
+                return response.text();
+            }
+
+            return fetch(buildGitHubRawUrl(path), { cache: 'no-store' })
+                .then(rawResponse => {
+                    if (rawResponse.ok) {
+                        return rawResponse.text();
+                    }
+
+                    throw new Error('Could not load ' + path);
+                });
+        });
+}
+
+function buildMarkdownUrl(path) {
+    return 'data/' + path
+        .split('/')
+        .map(segment => encodeURIComponent(segment))
+        .join('/');
+}
+
+function buildGitHubRawUrl(path) {
+    const repository = document
+        .querySelector('meta[name="github-repository"]')
+        .content;
+    const encodedPath = path
+        .split('/')
+        .map(segment => encodeURIComponent(segment))
+        .join('/');
+
+    return `https://raw.githubusercontent.com/${repository}/main/data/${encodedPath}`;
+}
+
+function parseFrontmatter(markdown) {
+    const normalized = markdown.replace(/\r\n/g, '\n');
+    const match = normalized.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
+    const properties = {};
+
+    if (!match) {
+        return properties;
+    }
+
+    let currentKey = '';
+
+    match[1].split('\n').forEach(line => {
+        const listItem = line.match(/^\s+-\s+(.+)$/);
+
+        if (listItem && currentKey) {
+            if (!Array.isArray(properties[currentKey])) {
+                properties[currentKey] = [];
+            }
+
+            properties[currentKey].push(stripQuotes(listItem[1].trim()));
+            return;
+        }
+
+        const separator = line.indexOf(':');
+
+        if (separator === -1) {
+            return;
+        }
+
+        const key = line.slice(0, separator).trim();
+        const value = stripQuotes(line.slice(separator + 1).trim());
+
+        if (key) {
+            currentKey = key;
+            properties[key] = value;
+        }
+    });
+
+    return properties;
+}
+
+function stripQuotes(value) {
+    return value.replace(/^(["'])(.*)\1$/, '$2');
 }
 
 function showError(message) {
