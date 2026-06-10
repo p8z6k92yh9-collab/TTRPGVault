@@ -232,7 +232,7 @@ if (!isSafeMarkdownPath(markdownFile)) {
     bookTitle.textContent = fallbackTitle;
     document.title = fallbackTitle + ' | TTRPG Vault';
 
-    fetch('data/' + markdownFile, { cache: 'no-store' })
+    fetch(buildMarkdownUrl(markdownFile), { cache: 'no-store' })
         .then(response => {
             if (!response.ok) {
                 throw new Error('Could not load ' + markdownFile);
@@ -253,6 +253,13 @@ function isSafeMarkdownPath(path) {
         !path.startsWith('/') &&
         !path.includes('..') &&
         !path.includes('\\');
+}
+
+function buildMarkdownUrl(path) {
+    return 'data/' + path
+        .split('/')
+        .map(segment => encodeURIComponent(segment))
+        .join('/');
 }
 
 function renderBook(markdown) {
