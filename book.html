@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="github-repository" content="TTRPGGamer/TTRPGVault">
 <title>Book Details</title>
 
 <style>
@@ -232,14 +233,7 @@ if (!isSafeMarkdownPath(markdownFile)) {
     bookTitle.textContent = fallbackTitle;
     document.title = fallbackTitle + ' | TTRPG Vault';
 
-    fetch(buildMarkdownUrl(markdownFile), { cache: 'no-store' })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Could not load ' + markdownFile);
-            }
-
-            return response.text();
-        })
+    loadMarkdown(markdownFile)
         .then(renderBook)
         .catch(error => {
             console.error('Error loading book Markdown:', error);
@@ -260,6 +254,38 @@ function buildMarkdownUrl(path) {
         .split('/')
         .map(segment => encodeURIComponent(segment))
         .join('/');
+}
+
+function loadMarkdown(path) {
+    const localUrl = buildMarkdownUrl(path);
+
+    return fetch(localUrl, { cache: 'no-store' })
+        .then(response => {
+            if (response.ok) {
+                return response.text();
+            }
+
+            return fetch(buildGitHubRawUrl(path), { cache: 'no-store' })
+                .then(rawResponse => {
+                    if (rawResponse.ok) {
+                        return rawResponse.text();
+                    }
+
+                    throw new Error('Could not load ' + path);
+                });
+        });
+}
+
+function buildGitHubRawUrl(path) {
+    const repository = document
+        .querySelector('meta[name="github-repository"]')
+        .content;
+    const encodedPath = path
+        .split('/')
+        .map(segment => encodeURIComponent(segment))
+        .join('/');
+
+    return `https://raw.githubusercontent.com/${repository}/main/data/${encodedPath}`;
 }
 
 function renderBook(markdown) {
